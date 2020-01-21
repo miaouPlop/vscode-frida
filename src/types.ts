@@ -37,3 +37,5 @@ export class Process {
   largeIcon: string = '';
   smallIcon: string = '';
 }
+
+export type Node = { [key: string]: Node };

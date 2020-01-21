@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as ipc from '../driver/ipc';
 
 import { resource } from '../utils';
-import { ProviderType, App, Process, Device } from '../types';
+import { ProviderType, App, Process, Device, Node } from '../types';
 
 export class DevicesProvider implements vscode.TreeDataProvider<TargetItem> {
 
@@ -102,12 +102,29 @@ export class NotFound extends TargetItem {
   contextValue = 'empty';
 }
 
+export class HierarchyItem extends TargetItem {
+  constructor(
+    public readonly name: string,
+    public readonly tree: Node,
+  ) {
+    super(name, vscode.TreeItemCollapsibleState.Collapsed);
+  }
+
+  children(): Thenable<TargetItem[]> {
+    return Promise.resolve(HierarchyItem.expand(this.tree));
+  }
+
+  static expand(tree: Node) {
+    return Object.entries(tree).map(([name, node]) => new HierarchyItem(name, node))
+  }
+}
+
 export class AppItem extends TargetItem {
   constructor(
     public readonly data: App,
     public readonly device: Device,
   ) {
-    super(data.name, vscode.TreeItemCollapsibleState.None);
+    super(data.name, vscode.TreeItemCollapsibleState.Collapsed);
   }
 
   get tooltip(): string {
@@ -119,7 +136,11 @@ export class AppItem extends TargetItem {
   }
 
   children(): Thenable<TargetItem[]> {
-    return Promise.resolve([]);
+    if (!this.data.pid) {
+      return Promise.resolve([]);
+    }
+
+    return ipc.classes(this.device.id, this.data.pid).then(root => HierarchyItem.expand(root));  
   }
 
   get command() {
@@ -150,7 +171,7 @@ export class ProcessItem extends TargetItem {
     public readonly data: Process,
     public readonly device: Device,
   ) {
-    super(data.name, vscode.TreeItemCollapsibleState.None);
+    super(data.name, vscode.TreeItemCollapsibleState.Collapsed);
   }
 
   get tooltip(): string {
@@ -162,7 +183,8 @@ export class ProcessItem extends TargetItem {
   }
 
   children(): Thenable<TargetItem[]> {
-    return Promise.resolve([]);
+    return ipc.classes(this.device.id, this.data.pid).then(root => HierarchyItem.expand(root));
+    // return Promise.resolve([]);
   }
 
   get iconPath() {

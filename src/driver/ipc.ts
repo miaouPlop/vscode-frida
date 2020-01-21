@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { promises as fs } from 'fs';
 
 import axios, { AxiosInstance } from 'axios';
-import { App, Process, Device } from '../types';
+import { App, Process, Device, Node } from '../types';
 import { window } from 'vscode';
 
 let cwd: string;
@@ -69,4 +69,8 @@ export function apps(id: string) {
 
 export function ps(id: string) {
   return client.get(`/device/${id}/ps`).then(r => r.data) as Promise<Process[]>;
+}
+
+export function classes(device: string, pid: number) {
+  return client.get(`/script/${device}/run/${pid}/hierarchy`) as Promise<Node>;
 }
