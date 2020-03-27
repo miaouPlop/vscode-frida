@@ -65,3 +65,32 @@ function withConfigValue<C, K extends Extract<keyof C, string>>(
         (outConfig as any)[key] = value;
     }
 }
+
+export async function runScriptOrNot(): Promise<boolean> {
+	const result = await vscode.window.showQuickPick(['Yes', 'No'], {
+		placeHolder: 'Do you want to run a script?'
+  });
+
+  if (result === "Yes") {
+    return true;
+  }
+
+  return false;
+}
+
+
+export async function whichScript(): Promise<string> {
+	const result = await vscode.window.showOpenDialog({
+    canSelectMany: false
+  });
+
+  if (result === undefined) {
+    return "";
+  }
+
+  if (result[0].toString().startsWith("file://")) {
+    return result[0].toString().replace("file://", "");
+  }
+  
+	return "";
+}

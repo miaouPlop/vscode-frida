@@ -6,7 +6,7 @@ import { Device, App, Process } from '../types';
 import * as os from 'os';
 
 import { VSCodeWriteFileOptions } from '../providers/filesystem';
-import { getConfiguration } from '../utils';
+import { getConfiguration, runScriptOrNot, whichScript } from '../utils';
 
 const py = join(__dirname, '..', '..', 'backend', 'driver.py');
 const configuration = getConfiguration();
@@ -101,7 +101,19 @@ export async function launch(device: string, bundle: string): Promise<Number> {
     remoteParams.push(device);
   }
 
-  const params = ['-f', bundle, ...remoteParams, bundle, '--no-pause', '-q', '-e', 'Process.id'];
+  const runScript = await runScriptOrNot();
+  let scriptArgs = [];
+
+  if (runScript === true) {
+    const script = await whichScript();
+
+    if (script !== "") {
+      scriptArgs.push('-l');
+      scriptArgs.push(script);
+    }
+  }
+
+  const params = ['-f', bundle, ...remoteParams, bundle, '--no-pause', '-q', '-e', 'Process.id', ...scriptArgs];
   const [bin, args] = platformize('frida', params);
 
   return new Promise((resolve, reject) => {

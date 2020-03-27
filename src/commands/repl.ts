@@ -4,7 +4,7 @@ import { TargetItem, AppItem, ProcessItem } from '../providers/devices';
 import { platform } from 'os';
 import { DeviceType } from '../types';
 import { terminate } from '../driver/frida';
-import { refresh, getConfiguration } from '../utils';
+import { refresh, getConfiguration, runScriptOrNot, whichScript } from '../utils';
 
 let NEXT_TERM_ID = 1;
 const configuration = getConfiguration();
@@ -20,6 +20,8 @@ function repl(args: string[], tool: string='frida') {
     args.push(runtime);
   }
 
+  console.log(`${tool} ${args.join(' ')}`);
+
   if (platform() === 'win32') {
     vscode.window.createTerminal(title, 'cmd.exe', ['/c', tool, ...args]).show();
   } else {
@@ -27,12 +29,24 @@ function repl(args: string[], tool: string='frida') {
   }
 }
 
-export function spawn(node?: AppItem) {
+export async function spawn(node?: AppItem) {
   if (!node) {
     // todo: select from list
     return;
   }
 
+  const runScript = await runScriptOrNot();
+  let scriptArgs = [];
+
+  if (runScript === true) {
+    const script = await whichScript();
+
+    if (script !== "") {
+      scriptArgs.push('-l');
+      scriptArgs.push(script);
+    }
+  }
+
   let remoteArgs = [];
   if (remote === true) {
     remoteArgs = ['-H', address];
@@ -40,16 +54,28 @@ export function spawn(node?: AppItem) {
     remoteArgs = ['--device', node.device.id];
   }
 
-  repl(['-f', node.data.identifier, ...remoteArgs, '--no-pause']);
+  repl(['-f', node.data.identifier, ...remoteArgs, ...scriptArgs, '--no-pause']);
   refresh();
 }
 
-export function spawnSuspended(node?: AppItem) {
+export async function spawnSuspended(node?: AppItem) {
   if (!node) {
     // todo: select
     return;
   }
 
+  const runScript = await runScriptOrNot();
+  let scriptArgs = [];
+
+  if (runScript === true) {
+    const script = await whichScript();
+
+    if (script !== "") {
+      scriptArgs.push('-l');
+      scriptArgs.push(script);
+    }
+  }
+
   let remoteArgs = [];
   if (remote === true) {
     remoteArgs = ['-H', address];
@@ -57,7 +83,7 @@ export function spawnSuspended(node?: AppItem) {
     remoteArgs = ['--device', node.device.id];
   }
 
-  repl(['-f', node.data.identifier, ...remoteArgs]);
+  repl(['-f', node.data.identifier, ...remoteArgs, ...scriptArgs]);
   refresh();
 }
 
@@ -74,10 +100,22 @@ export function kill(node?: TargetItem) {
   }
 }
 
-export function attach(node?: TargetItem) {
+export async function attach(node?: TargetItem) {
   if (!node) {
     // todo: select from list
     return;
+  }
+
+  const runScript = await runScriptOrNot();
+  let scriptArgs = [];
+
+  if (runScript === true) {
+    const script = await whichScript();
+
+    if (script !== "") {
+      scriptArgs.push('-l');
+      scriptArgs.push(script);
+    }
   }
 
   if (node instanceof AppItem || node instanceof ProcessItem) {
@@ -93,6 +131,6 @@ export function attach(node?: TargetItem) {
     }
 
     const device = node.device.type === DeviceType.Local ? [] : remoteArgs;
-    repl([node.data.pid.toString(), ...device]);
+    repl([node.data.pid.toString(), ...device, ...scriptArgs]);
   }
 }
