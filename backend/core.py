@@ -34,8 +34,15 @@ def get_device(device_id: str) -> frida.core.Device:
         return frida.get_usb_device(1)
     elif device_id == 'local':
         return frida.get_local_device()
+    elif device_id == 'remote':
+        return frida.get_remote_device()
     else:
         return frida.get_device(device_id, timeout=1)
+
+
+def add_remote_device(addr: str) -> frida.core.Device:
+    m = frida.get_device_manager()
+    return m.add_remote_device(addr)
 
 
 def apps(device: frida.core.Device) -> list:

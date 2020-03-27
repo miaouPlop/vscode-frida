@@ -17,7 +17,13 @@ def main(args):
     if not args.device:
         raise RuntimeError('NOTREACHED')
 
-    device = core.get_device(args.device)
+    if args.device == 'tcp':
+        if not args.addr:
+            raise RuntimeError('Missing option addr to reach remote device')
+        device = core.add_remote_device(args.addr)
+    else:
+        device = core.get_device(args.device)
+
     if args.action == 'ps':
         return core.ps(device)
 
@@ -61,6 +67,9 @@ if __name__ == '__main__':
 
     requires_device = argparse.ArgumentParser(add_help=False)
     requires_device.add_argument('device')
+    device_group = requires_device.add_argument_group()
+    device_group.add_argument('--addr', type=str)
+    device_group.required = False
 
     requires_path = argparse.ArgumentParser(add_help=False)
     requires_path.add_argument('path')

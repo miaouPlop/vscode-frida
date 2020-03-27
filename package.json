@@ -197,6 +197,36 @@
 					"group": "frida_external@4"
 				}
 			]
+		},
+		"configuration": {
+			"type": "object",
+			"title": "vscode-frida",
+			"properties": {
+				"vscodefrida.runtime": {
+					"type": "string",
+					"description": "Runtime used by frida",
+					"enum": [
+						"v8",
+						"duk"
+					],
+					"default": "v8"
+				},
+				"vscodefrida.remote": {
+					"type": "boolean",
+					"description": "Option to use if frida is listening on a specific IP/PORT",
+					"default": false
+				},
+				"vscodefrida.addr": {
+					"type": "string",
+					"description": "IP address to use if remote option is true",
+					"default": "127.0.0.1"
+				},
+				"vscodefrida.port": {
+					"type": "integer",
+					"description": "Port number to use if remote option is true",
+					"default": 0
+				}
+			}
 		}
 	},
 	"scripts": {

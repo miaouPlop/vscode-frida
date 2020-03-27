@@ -4,12 +4,22 @@ import { TargetItem, AppItem, ProcessItem } from '../providers/devices';
 import { platform } from 'os';
 import { DeviceType } from '../types';
 import { terminate } from '../driver/frida';
-import { refresh } from '../utils';
+import { refresh, getConfiguration } from '../utils';
 
 let NEXT_TERM_ID = 1;
+const configuration = getConfiguration();
+const runtime = configuration.runtime;
+const remote = configuration.remote;
+const address = `${configuration.addr}:${configuration.port}`;
 
 function repl(args: string[], tool: string='frida') {
-  const title = `Frida REPL #${NEXT_TERM_ID++}`;
+  const title = `Frida REPL ${runtime} ${remote ? address : 'DEVICE'} #${NEXT_TERM_ID++}`;
+  
+  if (tool === 'frida') {
+    args.push('--runtime');
+    args.push(runtime);
+  }
+
   if (platform() === 'win32') {
     vscode.window.createTerminal(title, 'cmd.exe', ['/c', tool, ...args]).show();
   } else {
@@ -23,7 +33,14 @@ export function spawn(node?: AppItem) {
     return;
   }
 
-  repl(['-f', node.data.identifier, '--device', node.device.id, '--no-pause']);
+  let remoteArgs = [];
+  if (remote === true) {
+    remoteArgs = ['-H', address];
+  } else {
+    remoteArgs = ['--device', node.device.id];
+  }
+
+  repl(['-f', node.data.identifier, ...remoteArgs, '--no-pause']);
   refresh();
 }
 
@@ -33,7 +50,14 @@ export function spawnSuspended(node?: AppItem) {
     return;
   }
 
-  repl(['-f', node.data.identifier, '--device', node.device.id]);
+  let remoteArgs = [];
+  if (remote === true) {
+    remoteArgs = ['-H', address];
+  } else {
+    remoteArgs = ['--device', node.device.id];
+  }
+
+  repl(['-f', node.data.identifier, ...remoteArgs]);
   refresh();
 }
 
@@ -61,7 +85,14 @@ export function attach(node?: TargetItem) {
       vscode.window.showErrorMessage(`App "${node.data.name}" must be running before attaching to it`);
     }
 
-    const device = node.device.type === DeviceType.Local ? [] : ['--device', node.device.id];
+    let remoteArgs = [];
+    if (remote === true) {
+      remoteArgs = ['-H', address];
+    } else {
+      remoteArgs = ['--device', node.device.id];
+    }
+
+    const device = node.device.type === DeviceType.Local ? [] : remoteArgs;
     repl([node.data.pid.toString(), ...device]);
   }
 }

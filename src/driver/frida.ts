@@ -6,8 +6,13 @@ import { Device, App, Process } from '../types';
 import * as os from 'os';
 
 import { VSCodeWriteFileOptions } from '../providers/filesystem';
+import { getConfiguration } from '../utils';
 
 const py = join(__dirname, '..', '..', 'backend', 'driver.py');
+const configuration = getConfiguration();
+const runtime = configuration.runtime;
+const remote = configuration.remote;
+const address = `${configuration.addr}:${configuration.port}`;
 
 export function platformize(tool: string, args: string[]): [string, string[]] {
   let bin = tool;
@@ -45,20 +50,60 @@ export function devices() {
 }
 
 export function apps(id: string) {
-  return exec('apps', id) as Promise<App[]>;
+  let params = ['apps', id];
+
+  if (id === 'tcp') {
+    if (remote === true) {
+      params.push('--addr');
+      params.push(address);
+    }
+  }
+  
+  return exec(...params) as Promise<App[]>;
 }
 
 export function ps(id: string) {
-  return exec('ps', id) as Promise<Process[]>;
+  let params = ['ps', id];
+
+  if (id === 'tcp') {
+    if (remote === true) {
+      params.push('--addr');
+      params.push(address);
+    }
+  }
+  
+  return exec(...params) as Promise<Process[]>;
 }
 
 export function devtype(id: string) {
-  return exec('type', id) as Promise<string>;
+  let params = ['type', id];
+
+  if (id === 'tcp') {
+    if (remote === true) {
+      params.push('--addr');
+      params.push(address);
+    }
+  }
+  
+  return exec(...params) as Promise<string>;
 }
 
 export async function launch(device: string, bundle: string): Promise<Number> {
-  const params = ['-f', bundle, '--device', device, bundle, '--no-pause', '-q', '-e', 'Process.id'];
+  let remoteParams = [];
+
+  if (device === 'tcp') {
+    if (remote === true) {
+      remoteParams.push('-H');
+      remoteParams.push(address);
+    }
+  } else {
+    remoteParams.push('--device');
+    remoteParams.push(device);
+  }
+
+  const params = ['-f', bundle, ...remoteParams, bundle, '--no-pause', '-q', '-e', 'Process.id'];
   const [bin, args] = platformize('frida', params);
+
   return new Promise((resolve, reject) => {
     execFile(bin, args, {}, (err, stdout) => {
       if (err) {
@@ -75,7 +120,19 @@ export async function launch(device: string, bundle: string): Promise<Number> {
 }
 
 export function terminate(device: string, target: string) {
-  const [bin, args] = platformize('frida-kill', ['--device', device, target]);
+  let remoteParams = [];
+
+  if (device === 'tcp') {
+    if (remote === true) {
+      remoteParams.push('-H');
+      remoteParams.push(address);
+    }
+  } else {
+    remoteParams.push('--device');
+    remoteParams.push(device);
+  }
+
+  const [bin, args] = platformize('frida-kill', [...remoteParams, target]);
 
   return new Promise((resolve, reject) => {
     execFile(bin, args, {}, (err, stdout) => {
@@ -90,7 +147,19 @@ export function terminate(device: string, target: string) {
 
 export namespace fs {
   export async function download(device: string, pid: number, uri: string): Promise<Uint8Array> {
-    const params = [py, 'download', uri, '--device', device, '--pid', pid.toString()];
+    let remoteParams = [];
+  
+    if (device === 'tcp') {
+      if (remote === true) {
+        remoteParams.push('--addr');
+        remoteParams.push(address);
+      }
+    } else {
+      remoteParams.push('--device');
+      remoteParams.push(device);
+    }
+  
+    const params = [py, 'download', uri, ...remoteParams, '--pid', pid.toString()];
     const [bin, args] = platformize('python3', params);
   
 
@@ -110,8 +179,20 @@ export namespace fs {
 
   export async function upload(device: string, pid: number, uri: string, content: Uint8Array,
     options: VSCodeWriteFileOptions): Promise<void> {
+    let remoteParams = [];
+  
+    if (device === 'tcp') {
+      if (remote === true) {
+        remoteParams.push('--addr');
+        remoteParams.push(address);
+      }
+    } else {
+      remoteParams.push('--device');
+      remoteParams.push(device);
+    }
+    
     // todo: options
-    const params = [py, 'upload', uri, '--device', device, '--pid', pid.toString()];
+    const params = [py, 'upload', uri, ...remoteParams, '--pid', pid.toString()];
     const [bin, args] = platformize('python3', params);
 
     return new Promise((resolve, reject) => {
