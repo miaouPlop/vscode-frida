@@ -14,14 +14,23 @@ export function platformize(tool: string, args: string[]): [string, string[]] {
   let joint = args;
   if (os.platform() === 'win32') {
     bin = 'cmd.exe';
+
+    // use python3 on Windows with multiple versions installed
+    if (tool === 'python3') {
+      bin = 'py';
+      args.splice(0, 0, '-3');
+    }
+
     joint = ['/c', tool, ...args];
   }
   return [bin, joint];
 }
 
-export function exec(...args: string[]): Promise<any> {
+export function exec(...params: string[]): Promise<any> {
+  const [bin, args] = platformize('python3', params);
+
   return new Promise((resolve, reject) => {
-    execFile('python3', [py, ...args], {}, (err, stdout, stderr) => {
+    execFile(bin, [py, ...args], {}, (err, stdout, stderr) => {
       if (err) {
         reject(err);
       } else {
@@ -81,10 +90,12 @@ export function terminate(device: string, target: string) {
 
 export namespace fs {
   export async function download(device: string, pid: number, uri: string): Promise<Uint8Array> {
-    const args = [py, 'download', uri, '--device', device, '--pid', pid.toString()];
+    const params = [py, 'download', uri, '--device', device, '--pid', pid.toString()];
+    const [bin, args] = platformize('python3', params);
+  
 
     return new Promise((resolve, reject) => {
-      const p = spawn('python3', args);
+      const p = spawn(bin, args);
       const parts: Buffer[] = [];
       p.stdout.on('data', data => parts.push(data));
       p.on('close', (code, signal) => {
@@ -100,9 +111,11 @@ export namespace fs {
   export async function upload(device: string, pid: number, uri: string, content: Uint8Array,
     options: VSCodeWriteFileOptions): Promise<void> {
     // todo: options
-    const args = [py, 'upload', uri, '--device', device, '--pid', pid.toString()];
+    const params = [py, 'upload', uri, '--device', device, '--pid', pid.toString()];
+    const [bin, args] = platformize('python3', params);
+
     return new Promise((resolve, reject) => {
-      const p = spawn('python3', args);
+      const p = spawn(bin, args);
       p.on('close', (code: number, signal: NodeJS.Signals) => {
         if (code === 0) {
           resolve();
