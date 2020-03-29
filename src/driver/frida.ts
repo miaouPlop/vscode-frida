@@ -22,20 +22,21 @@ export function platformize(tool: string, args: string[]): [string, string[]] {
 
     // use python3 on Windows with multiple versions installed
     if (tool === 'python3') {
-      bin = 'py';
+      tool = 'py';
       args.splice(0, 0, '-3');
     }
 
     joint = ['/c', tool, ...args];
   }
+
   return [bin, joint];
 }
 
 export function exec(...params: string[]): Promise<any> {
-  const [bin, args] = platformize('python3', params);
+  const [bin, args] = platformize('python3', [py, ...params]);
 
   return new Promise((resolve, reject) => {
-    execFile(bin, [py, ...args], {}, (err, stdout, stderr) => {
+    execFile(bin, args, {}, (err, stdout, stderr) => {
       if (err) {
         reject(err);
       } else {
