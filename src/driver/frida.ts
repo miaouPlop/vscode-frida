@@ -35,6 +35,8 @@ export function platformize(tool: string, args: string[]): [string, string[]] {
 export function exec(...params: string[]): Promise<any> {
   const [bin, args] = platformize('python3', [py, ...params]);
 
+  console.log(`${bin} ${args.join(' ')}`);
+
   return new Promise((resolve, reject) => {
     execFile(bin, args, {}, (err, stdout, stderr) => {
       if (err) {

@@ -49,6 +49,7 @@ def main(args):
 
     if args.action == 'fs':
         method = getattr(fs, args.method)
+        print(method)
         return method(*args.args)
 
     if args.action == 'download':
@@ -67,15 +68,14 @@ if __name__ == '__main__':
 
     requires_device = argparse.ArgumentParser(add_help=False)
     requires_device.add_argument('device')
-    device_group = requires_device.add_argument_group()
-    device_group.add_argument('--addr', type=str)
-    device_group.required = False
+    requires_device.add_argument('--addr', type=str, required=False)
 
     requires_path = argparse.ArgumentParser(add_help=False)
     requires_path.add_argument('path')
 
     requires_app = argparse.ArgumentParser(add_help=False)
     requires_app.add_argument('--device', required=True)
+    requires_app.add_argument('--addr', type=str, required=False)
     group = requires_app.add_mutually_exclusive_group()
     group.add_argument('--app')
     group.add_argument('--pid', type=int)
@@ -83,7 +83,8 @@ if __name__ == '__main__':
     group.required = True
 
     parser = argparse.ArgumentParser(description='frida driver')
-    subparsers = parser.add_subparsers(dest='action', required=True)
+    subparsers = parser.add_subparsers(dest='action')
+    subparsers.required = True
     subparsers.add_parser('devices')
     subparsers.add_parser('apps', parents=[requires_device])
     subparsers.add_parser('ps', parents=[requires_device])

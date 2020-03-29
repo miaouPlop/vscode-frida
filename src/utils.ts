@@ -88,9 +88,5 @@ export async function whichScript(): Promise<string> {
     return "";
   }
 
-  if (result[0].toString().startsWith("file://")) {
-    return result[0].toString().replace("file://", "");
-  }
-  
-	return "";
+  return result[0].fsPath.toString();
 }
