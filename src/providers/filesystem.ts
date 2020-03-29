@@ -3,6 +3,8 @@ import * as vscode from 'vscode';
 
 import { exec, fs } from '../driver/frida';
 
+type timer = ReturnType<typeof setTimeout>;
+
 interface TargetInfo {
   pid: number;
   device: string;
@@ -64,7 +66,7 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
   private _bufferedEvents: vscode.FileChangeEvent[] = [];
-  private _fireSoonHandle?: number;
+  private _fireSoonHandle?: timer;
   readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
   private pids: { [key: string]: number } = {};
