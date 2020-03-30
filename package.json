@@ -2,7 +2,10 @@
 	"name": "vscode-frida",
 	"displayName": "vscode-frida",
 	"description": "Unofficial frida workbench for VSCode",
-	"version": "0.0.1",
+    "version": "0.0.1",
+    "extensionKind": [
+        "workspace"
+    ],
 	"engines": {
 		"vscode": "^1.41.0"
 	},
