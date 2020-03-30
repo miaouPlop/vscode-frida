@@ -8,7 +8,6 @@ type timer = ReturnType<typeof setTimeout>;
 const configuration = getConfiguration();
 const runtime = configuration.runtime;
 const remote = configuration.remote;
-const address = `${configuration.addr}:${configuration.port}`;
 
 interface TargetInfo {
   pid: number;
@@ -77,15 +76,6 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
   private pids: { [key: string]: number } = {};
   async ensureRunning(info: TargetInfo): Promise<TargetInfo> {
     const { device, app, pid } = info;
-  
-    let remoteParams = [];
-    
-    if (device === 'tcp') {
-      if (remote === true) {
-        remoteParams.push('--addr');
-        remoteParams.push(address);
-      }
-    }
 
     let result = info;
     if (!pid) {
@@ -94,7 +84,7 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
       if (key in this.pids) {
         newPid = this.pids[key];
       } else {
-        newPid = await exec('rpc', 'ping', '--device', device, ...remoteParams, '--app', app);
+        newPid = await exec('rpc', 'ping', '--device', device, '--app', app);
         this.pids[key] = newPid;
       }
       result = Object.assign(info, { pid: newPid });
@@ -104,48 +94,21 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
     const info = parseRemoteUri(uri);
-    
-    let remoteParams = [];
-    
-    if (info.device === 'tcp') {
-      if (remote === true) {
-        remoteParams.push('--addr');
-        remoteParams.push(address);
-      }
-    }
 
     await this.ensureRunning(info);
     return exec('fs', 'stat', info.path,
-      '--pid', info.pid.toString(), '--device', info.device, ...remoteParams);
+      '--pid', info.pid.toString(), '--device', info.device);
   }
 
   async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     const info = parseRemoteUri(uri);
-    
-    let remoteParams = [];
-    
-    if (info.device === 'tcp') {
-      if (remote === true) {
-        remoteParams.push('--addr');
-        remoteParams.push(address);
-      }
-    }
 
     await this.ensureRunning(info);
-    return exec('fs', 'ls', info.path, '--pid', info.pid.toString(), '--device', info.device, ...remoteParams);
+    return exec('fs', 'ls', info.path, '--pid', info.pid.toString(), '--device', info.device);
   }
 
   async createDirectory(uri: vscode.Uri): Promise<void> {
     const info = parseRemoteUri(uri);
-    
-    let remoteParams = [];
-    
-    if (info.device === 'tcp') {
-      if (remote === true) {
-        remoteParams.push('--addr');
-        remoteParams.push(address);
-      }
-    }
 
     await this.ensureRunning(info);
 
@@ -154,7 +117,7 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
       { type: vscode.FileChangeType.Changed, uri: dirname },
       { type: vscode.FileChangeType.Created, uri });
 
-    return exec('fs', 'mkdir', info.path, '--pid', info.pid.toString(), '--device', info.device, ...remoteParams);
+    return exec('fs', 'mkdir', info.path, '--pid', info.pid.toString(), '--device', info.device);
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
@@ -175,19 +138,10 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
     const info = parseRemoteUri(uri);
-    
-    let remoteParams = [];
-    
-    if (info.device === 'tcp') {
-      if (remote === true) {
-        remoteParams.push('--addr');
-        remoteParams.push(address);
-      }
-    }
 
     await this.ensureRunning(info);
     const result = exec('fs', 'rm', info.path, JSON.stringify(options),
-      '--pid', info.pid.toString(), '--device', info.device, ...remoteParams);
+      '--pid', info.pid.toString(), '--device', info.device);
 
     const dirname = uri.with({ path: posix.dirname(uri.path) });
     this._fireSoon(
@@ -198,21 +152,12 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
     const src = parseRemoteUri(oldUri);
-    
-    let remoteParams = [];
-    
-    if (src.device === 'tcp') {
-      if (remote === true) {
-        remoteParams.push('--addr');
-        remoteParams.push(address);
-      }
-    }
-
     const dst = parseRemoteUri(newUri);
+    
     sameOriginCheck(src, dst);
     await this.ensureRunning(src);
     const result = exec('fs', 'mv', src.path, dst.path, JSON.stringify(options),
-      '--pid', src.pid.toString(), '--device', src.device, ...remoteParams);
+      '--pid', src.pid.toString(), '--device', src.device);
 
     const dirnameOld = oldUri.with({ path: posix.dirname(oldUri.path) });
     const dirnameNew = oldUri.with({ path: posix.dirname(oldUri.path) });

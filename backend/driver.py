@@ -12,15 +12,15 @@ def main(args):
     from backend.fs import FileSystem
 
     if args.action == 'devices':
+        for device in args.remote:
+            core.add_remote_device(device)
         return core.devices()
 
     if not args.device:
         raise RuntimeError('NOTREACHED')
 
-    if args.device == 'tcp':
-        if not args.addr:
-            raise RuntimeError('Missing option addr to reach remote device')
-        device = core.add_remote_device(args.addr)
+    if "remote@" in args.device:
+        device = core.add_remote_device(args.device.split("@")[1])
     else:
         device = core.get_device(args.device)
 
@@ -82,10 +82,13 @@ if __name__ == '__main__':
     group.add_argument('--name')
     group.required = True
 
+    list_remote_devices = argparse.ArgumentParser(add_help=False)
+    list_remote_devices.add_argument('remote', metavar='N', nargs='*', default=[])
+
     parser = argparse.ArgumentParser(description='frida driver')
     subparsers = parser.add_subparsers(dest='action')
     subparsers.required = True
-    subparsers.add_parser('devices')
+    subparsers.add_parser('devices', parents=[list_remote_devices])
     subparsers.add_parser('apps', parents=[requires_device])
     subparsers.add_parser('ps', parents=[requires_device])
     subparsers.add_parser('type', parents=[requires_device])

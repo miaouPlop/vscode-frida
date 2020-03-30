@@ -10,10 +10,11 @@ let NEXT_TERM_ID = 1;
 const configuration = getConfiguration();
 const runtime = configuration.runtime;
 const remote = configuration.remote;
-const address = `${configuration.addr}:${configuration.port}`;
 
 function repl(args: string[], tool: string='frida') {
-  const title = `Frida REPL ${runtime} ${remote ? address : 'DEVICE'} #${NEXT_TERM_ID++}`;
+  let deviceName = args[((args.indexOf("--device") > 0) ? (args.indexOf("--device")) : (args.indexOf("-H"))) + 1];
+
+  const title = `Frida REPL ${runtime} ${deviceName} #${NEXT_TERM_ID++}`;
   
   if (tool === 'frida') {
     args.push('--runtime');
@@ -49,7 +50,7 @@ export async function spawn(node?: AppItem) {
 
   let remoteArgs = [];
   if (remote === true) {
-    remoteArgs = ['-H', address];
+    remoteArgs = ['-H', node.device.name];
   } else {
     remoteArgs = ['--device', node.device.id];
   }
@@ -78,7 +79,7 @@ export async function spawnSuspended(node?: AppItem) {
 
   let remoteArgs = [];
   if (remote === true) {
-    remoteArgs = ['-H', address];
+    remoteArgs = ['-H', node.device.name];
   } else {
     remoteArgs = ['--device', node.device.id];
   }
@@ -125,7 +126,7 @@ export async function attach(node?: TargetItem) {
 
     let remoteArgs = [];
     if (remote === true) {
-      remoteArgs = ['-H', address];
+      remoteArgs = ['-H', node.device.name];
     } else {
       remoteArgs = ['--device', node.device.id];
     }

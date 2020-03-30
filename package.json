@@ -215,16 +215,11 @@
 					"type": "boolean",
 					"description": "Option to use if frida is listening on a specific IP/PORT",
 					"default": false
-				},
-				"vscodefrida.addr": {
-					"type": "string",
-					"description": "IP address to use if remote option is true",
-					"default": "127.0.0.1"
-				},
-				"vscodefrida.port": {
-					"type": "integer",
-					"description": "Port number to use if remote option is true",
-					"default": 0
+                },
+                "vscodefrida.addr": {
+                    "type":"array",
+					"description": "IP:PORT of remote devices to use if remote option is true",
+					"default": []
 				}
 			}
 		}
