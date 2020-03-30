@@ -1,8 +1,8 @@
 import * as cp from 'child_process';
 
 import { TargetItem, AppItem, ProcessItem } from "../providers/devices";
-import { devtype, platformize } from '../driver/frida';
-import { refresh } from '../utils';
+import { devtype } from '../driver/frida';
+import { refresh, platformize } from '../utils';
 
 import { window, OutputChannel } from 'vscode';
 import { join } from 'path';

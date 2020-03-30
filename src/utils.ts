@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { join } from 'path';
+import { platform } from 'os';
 
 const configurationSection = 'vscodefrida';
 
@@ -86,4 +87,23 @@ export async function whichScript(): Promise<string> {
   }
 
   return result[0].fsPath.toString();
+}
+
+
+export function platformize(tool: string, args: string[]): [string, string[]] {
+  let bin = tool;
+  let joint = args;
+  if (platform() === 'win32') {
+    bin = 'cmd.exe';
+
+    // use python3 on Windows with multiple versions installed
+    if (tool === 'python3') {
+      tool = 'py';
+      args.splice(0, 0, '-3');
+    }
+
+    joint = ['/c', tool, ...args];
+  }
+
+  return [bin, joint];
 }

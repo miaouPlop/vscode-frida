@@ -24,7 +24,8 @@
 		"onCommand:frida.syslog.vacuum",
 		"onCommand:frida.browse",
 		"onCommand:frida.external.bagbak",
-		"onCommand:frida.external.objection"
+        "onCommand:frida.external.objection",
+        "onCommand:frida.external.compile"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -103,7 +104,12 @@
 				"command": "frida.external.objection",
 				"title": "Objection",
 				"category": "Frida"
-			}
+            },
+            {
+                "command": "frida.external.compile",
+                "title": "Compile frida script",
+                "category": "Frida"
+            }
 		],
 		"viewsContainers": {
 			"activitybar": [
@@ -198,8 +204,22 @@
 					"command": "frida.external.objection",
 					"when": "view == fridaApps && viewItem =~ /^app|/ && viewItem != device",
 					"group": "frida_external@4"
-				}
-			]
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "frida.external.compile",
+                    "when": "editorLangId == typescript",
+                    "group": "navigation"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "frida.external.compile",
+                    "when": "resourceLangId == typescript",
+                    "group": "navigation"
+                }
+            ]
 		},
 		"configuration": {
 			"type": "object",

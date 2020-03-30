@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 
-import { platformize, launch } from '../driver/frida';
+import { launch } from '../driver/frida';
 import { TargetItem, AppItem, ProcessItem } from "../providers/devices";
 import { DeviceType } from '../types';
+import { platformize } from '../utils';
 
 export async function explore(target: TargetItem) {
   if (!target) {

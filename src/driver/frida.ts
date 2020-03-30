@@ -6,30 +6,12 @@ import { Device, App, Process } from '../types';
 import * as os from 'os';
 
 import { VSCodeWriteFileOptions } from '../providers/filesystem';
-import { getConfiguration, runScriptOrNot, whichScript } from '../utils';
+import { getConfiguration, runScriptOrNot, whichScript, platformize } from '../utils';
 import { URLSearchParams } from 'url';
 
 const py = join(__dirname, '..', '..', 'backend', 'driver.py');
 const configuration = getConfiguration();
 const remote = configuration.remote;
-
-export function platformize(tool: string, args: string[]): [string, string[]] {
-  let bin = tool;
-  let joint = args;
-  if (os.platform() === 'win32') {
-    bin = 'cmd.exe';
-
-    // use python3 on Windows with multiple versions installed
-    if (tool === 'python3') {
-      tool = 'py';
-      args.splice(0, 0, '-3');
-    }
-
-    joint = ['/c', tool, ...args];
-  }
-
-  return [bin, joint];
-}
 
 export function exec(...params: string[]): Promise<any> {
   const [bin, args] = platformize('python3', [py, ...params]);
