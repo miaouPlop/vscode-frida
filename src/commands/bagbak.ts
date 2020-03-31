@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 
-import { devtype, platformize } from '../driver/frida';
+import { devtype } from '../driver/frida';
 import { AppItem } from "../providers/devices";
+import { platformize } from '../utils';
 
 export async function dump(target: AppItem) {
   if (!target) {

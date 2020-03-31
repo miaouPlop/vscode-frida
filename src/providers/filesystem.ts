@@ -2,6 +2,12 @@ import { posix } from 'path';
 import * as vscode from 'vscode';
 
 import { exec, fs } from '../driver/frida';
+import { getConfiguration } from '../utils';
+
+type timer = ReturnType<typeof setTimeout>;
+const configuration = getConfiguration();
+const runtime = configuration.runtime;
+const remote = configuration.remote;
 
 interface TargetInfo {
   pid: number;
@@ -64,12 +70,13 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   private _emitter = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
   private _bufferedEvents: vscode.FileChangeEvent[] = [];
-  private _fireSoonHandle?: number;
+  private _fireSoonHandle?: timer;
   readonly onDidChangeFile: vscode.Event<vscode.FileChangeEvent[]> = this._emitter.event;
 
   private pids: { [key: string]: number } = {};
   async ensureRunning(info: TargetInfo): Promise<TargetInfo> {
     const { device, app, pid } = info;
+
     let result = info;
     if (!pid) {
       const key = [device, app].join('/');
@@ -87,6 +94,7 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   async stat(uri: vscode.Uri): Promise<vscode.FileStat> {
     const info = parseRemoteUri(uri);
+
     await this.ensureRunning(info);
     return exec('fs', 'stat', info.path,
       '--pid', info.pid.toString(), '--device', info.device);
@@ -94,12 +102,14 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   async readDirectory(uri: vscode.Uri): Promise<[string, vscode.FileType][]> {
     const info = parseRemoteUri(uri);
+
     await this.ensureRunning(info);
     return exec('fs', 'ls', info.path, '--pid', info.pid.toString(), '--device', info.device);
   }
 
   async createDirectory(uri: vscode.Uri): Promise<void> {
     const info = parseRemoteUri(uri);
+
     await this.ensureRunning(info);
 
     const dirname = uri.with({ path: posix.dirname(uri.path) });
@@ -128,6 +138,7 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
 
   async delete(uri: vscode.Uri, options: { recursive: boolean; }): Promise<void> {
     const info = parseRemoteUri(uri);
+
     await this.ensureRunning(info);
     const result = exec('fs', 'rm', info.path, JSON.stringify(options),
       '--pid', info.pid.toString(), '--device', info.device);
@@ -142,6 +153,7 @@ export class FileSystemProvider implements vscode.FileSystemProvider {
   async rename(oldUri: vscode.Uri, newUri: vscode.Uri, options: { overwrite: boolean; }): Promise<void> {
     const src = parseRemoteUri(oldUri);
     const dst = parseRemoteUri(newUri);
+    
     sameOriginCheck(src, dst);
     await this.ensureRunning(src);
     const result = exec('fs', 'mv', src.path, dst.path, JSON.stringify(options),

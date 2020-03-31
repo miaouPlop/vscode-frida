@@ -3,7 +3,10 @@
 	"displayName": "vscode-frida",
 	"publisher": "codecolorist",
 	"description": "Unofficial frida workbench for VSCode",
-	"version": "0.0.1",
+    "version": "0.0.1",
+    "extensionKind": [
+        "workspace"
+    ],
 	"engines": {
 		"vscode": "^1.41.0"
 	},
@@ -25,7 +28,8 @@
 		"onCommand:frida.syslog.vacuum",
 		"onCommand:frida.browse",
 		"onCommand:frida.external.bagbak",
-		"onCommand:frida.external.objection"
+        "onCommand:frida.external.objection",
+        "onCommand:frida.external.compile"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -104,7 +108,12 @@
 				"command": "frida.external.objection",
 				"title": "Objection",
 				"category": "Frida"
-			}
+            },
+            {
+                "command": "frida.external.compile",
+                "title": "Compile frida script",
+                "category": "Frida"
+            }
 		],
 		"viewsContainers": {
 			"activitybar": [
@@ -199,8 +208,22 @@
 					"command": "frida.external.objection",
 					"when": "view == fridaApps && viewItem =~ /^app|/ && viewItem != device",
 					"group": "frida_external@4"
-				}
-			]
+                }
+            ],
+            "editor/context": [
+                {
+                    "command": "frida.external.compile",
+                    "when": "editorLangId == typescript",
+                    "group": "navigation"
+                }
+            ],
+            "explorer/context": [
+                {
+                    "command": "frida.external.compile",
+                    "when": "resourceLangId == typescript",
+                    "group": "navigation"
+                }
+            ]
 		},
 		"configuration": {
 			"type": "object",
@@ -219,16 +242,11 @@
 					"type": "boolean",
 					"description": "Option to use if frida is listening on a specific IP/PORT",
 					"default": false
-				},
-				"vscodefrida.addr": {
-					"type": "string",
-					"description": "IP address to use if remote option is true",
-					"default": "127.0.0.1"
-				},
-				"vscodefrida.port": {
-					"type": "integer",
-					"description": "Port number to use if remote option is true",
-					"default": 0
+                },
+                "vscodefrida.addr": {
+                    "type":"array",
+					"description": "IP:PORT of remote devices to use if remote option is true",
+					"default": []
 				}
 			}
 		}

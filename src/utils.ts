@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { join } from 'path';
+import { platform } from 'os';
 
 const configurationSection = 'vscodefrida';
 
@@ -18,52 +19,49 @@ export function refresh() {
 }
 
 interface SynchronizedConfiguration {
-    runtime: 'v8' | 'duk';
-    remote: boolean;
-    addr: string;
-    port: number;
+  runtime: 'v8' | 'duk';
+  remote: boolean;
+  addr: string[];
 }
 
 export function getConfiguration(): SynchronizedConfiguration {
-    const config = vscode.workspace.getConfiguration(configurationSection);
-    const outConfig: SynchronizedConfiguration = {
-      runtime: 'v8',
-      remote: false,
-      addr: "",
-      port: 0
-    };
+  const config = vscode.workspace.getConfiguration(configurationSection);
+  const outConfig: SynchronizedConfiguration = {
+    runtime: 'v8',
+    remote: false,
+    addr: [],
+  };
 
-    withConfigValue(config, outConfig, 'runtime');
-    withConfigValue(config, outConfig, 'remote');
-    withConfigValue(config, outConfig, 'addr');
-    withConfigValue(config, outConfig, 'port');
+  withConfigValue(config, outConfig, 'runtime');
+  withConfigValue(config, outConfig, 'remote');
+  withConfigValue(config, outConfig, 'addr');
 
-    return outConfig;
+  return outConfig;
 }
 
 function withConfigValue<C, K extends Extract<keyof C, string>>(
-    config: vscode.WorkspaceConfiguration,
-    outConfig: C,
-    key: K,
+  config: vscode.WorkspaceConfiguration,
+  outConfig: C,
+  key: K,
 ): void {
-    const configSetting = config.inspect<C[K]>(key);
-    if (!configSetting) {
-        return;
-    }
+  const configSetting = config.inspect<C[K]>(key);
+  if (!configSetting) {
+      return;
+  }
 
-    // Make sure the user has actually set the value.
-    // VS Code will return the default values instead of `undefined`, even if user has not don't set anything.
-    if (typeof configSetting.globalValue === 'undefined'
-        && typeof configSetting.workspaceFolderValue === 'undefined'
-        && typeof configSetting.workspaceValue === 'undefined'
-    ) {
-        return;
-    }
+  // Make sure the user has actually set the value.
+  // VS Code will return the default values instead of `undefined`, even if user has not don't set anything.
+  if (typeof configSetting.globalValue === 'undefined'
+    && typeof configSetting.workspaceFolderValue === 'undefined'
+    && typeof configSetting.workspaceValue === 'undefined'
+  ) {
+    return;
+  }
 
-    const value = config.get<vscode.WorkspaceConfiguration[K] | undefined>(key, undefined);
-    if (typeof value !== 'undefined') {
-        (outConfig as any)[key] = value;
-    }
+  const value = config.get<vscode.WorkspaceConfiguration[K] | undefined>(key, undefined);
+  if (typeof value !== 'undefined') {
+    (outConfig as any)[key] = value;
+  }
 }
 
 export async function runScriptOrNot(): Promise<boolean> {
@@ -88,9 +86,24 @@ export async function whichScript(): Promise<string> {
     return "";
   }
 
-  if (result[0].toString().startsWith("file://")) {
-    return result[0].toString().replace("file://", "");
+  return result[0].fsPath.toString();
+}
+
+
+export function platformize(tool: string, args: string[]): [string, string[]] {
+  let bin = tool;
+  let joint = args;
+  if (platform() === 'win32') {
+    bin = 'cmd.exe';
+
+    // use python3 on Windows with multiple versions installed
+    if (tool === 'python3') {
+      tool = 'py';
+      args.splice(0, 0, '-3');
+    }
+
+    joint = ['/c', tool, ...args];
   }
-  
-	return "";
+
+  return [bin, joint];
 }

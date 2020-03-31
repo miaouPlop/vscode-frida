@@ -2,7 +2,7 @@ import * as cp from 'child_process';
 
 import { TargetItem, AppItem, ProcessItem } from "../providers/devices";
 import { devtype } from '../driver/frida';
-import { refresh } from '../utils';
+import { refresh, platformize } from '../utils';
 
 import { window, OutputChannel } from 'vscode';
 import { join } from 'path';
@@ -52,8 +52,10 @@ export function show(node?: TargetItem) {
   devtype(node.device.id).then(type => {
     if (type === 'iOS' || type === 'Linux' || type === 'macOS') {
       const py: string = join(__dirname, '..', '..', 'backend', 'driver.py');
-      const args = [py, 'syslog', '--device', node.device.id.toString(), ...bundleOrPid];
-      cmdChannel(`Output: ${node.data.name} (${node.device.name})`, 'python3', args).show();
+      const params = [py, 'syslog', '--device', node.device.id.toString(), ...bundleOrPid];
+      const [bin, args] = platformize('python3', [py, ...params]);
+      
+      cmdChannel(`Output: ${node.data.name} (${node.device.name})`, bin, args).show();
     } else if (type === 'Android') {
       // todo: adb logcat
     } else {
