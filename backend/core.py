@@ -114,7 +114,7 @@ def spawn_or_attach(device: frida.core.Device, bundle: str) -> frida.core.Sessio
     script = session.create_script(source)
     script.load()
     MAX_RETRY = 5
-    for i in range(MAX_RETRY):
+    for _ in range(MAX_RETRY):
         try:
             time.sleep(0.2)
             if script.exports.ok():
