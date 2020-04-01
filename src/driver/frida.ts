@@ -1,5 +1,6 @@
-import { join } from 'path';
+import * as vscode from 'vscode';
 
+import { join } from 'path';
 import { execFile, spawn } from 'child_process';
 import { Device, App, Process } from '../types';
 
@@ -33,7 +34,6 @@ export function devices() {
   let params: string[] = [];
 
   configuration.addr.map(remote => {
-    params.push('remote');
     params.push(remote);
   });
 
@@ -71,16 +71,22 @@ export async function launch(device: string, bundle: string): Promise<Number> {
   const runScript = await runScriptOrNot();
   let scriptArgs = [];
 
-  if (runScript === true) {
-    const script = await whichScript();
+  if (runScript !== 0) {
+    let script: string | undefined;
+    if (runScript === 1) {
+      script = await whichScript();
+    } else {
+      script = vscode.window.activeTextEditor?.document.uri.fsPath;
+    }
 
-    if (script !== "") {
+    if (script !== "" && script !== undefined) {
       scriptArgs.push('-l');
       scriptArgs.push(script);
     }
   }
 
-  const params = ['-f', bundle, ...remoteParams, bundle, '--no-pause', '-q', '-e', 'Process.id', ...scriptArgs];
+
+  const params = ['-f', bundle, ...remoteParams, '--no-pause', '-q', '-e', 'Process.id', ...scriptArgs];
   const [bin, args] = platformize('frida', params);
 
   return new Promise((resolve, reject) => {

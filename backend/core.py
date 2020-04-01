@@ -45,6 +45,11 @@ def add_remote_device(addr: str) -> frida.core.Device:
     return m.add_remote_device(addr)
 
 
+def remove_remote_device(addr: str) -> None:
+    m = frida.get_device_manager()
+    m.remove_remote_device(addr)
+
+
 def apps(device: frida.core.Device) -> list:
     props = ['identifier', 'name', 'pid']
 

@@ -3,16 +3,13 @@
 	"displayName": "vscode-frida",
 	"publisher": "codecolorist",
 	"description": "Unofficial frida workbench for VSCode",
-    "version": "0.0.1",
-    "extensionKind": [
-        "workspace"
-    ],
-	"engines": {
-		"vscode": "^1.41.0"
-	},
+	"version": "0.0.1",
 	"extensionKind": [
 		"workspace"
 	],
+	"engines": {
+		"vscode": "^1.41.0"
+	},
 	"categories": [
 		"Other"
 	],
@@ -27,9 +24,11 @@
 		"onCommand:frida.syslog",
 		"onCommand:frida.syslog.vacuum",
 		"onCommand:frida.browse",
+		"onCommand:frida.runlast",
 		"onCommand:frida.external.bagbak",
-        "onCommand:frida.external.objection",
-        "onCommand:frida.external.compile"
+		"onCommand:frida.external.objection",
+		"onCommand:frida.external.compile",
+		"onCommand:frida.external.watch"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -108,12 +107,22 @@
 				"command": "frida.external.objection",
 				"title": "Objection",
 				"category": "Frida"
-            },
-            {
-                "command": "frida.external.compile",
-                "title": "Compile frida script",
-                "category": "Frida"
-            }
+			},
+			{
+				"command": "frida.external.compile",
+				"title": "Compile frida script",
+				"category": "Frida"
+			},
+			{
+				"command": "frida.external.watch",
+				"title": "Watch frida script",
+				"category": "Frida"
+			},
+			{
+				"command": "frida.runlast",
+				"title": "Run last frida REPL command",
+				"category": "Frida"
+			}
 		],
 		"viewsContainers": {
 			"activitybar": [
@@ -208,22 +217,44 @@
 					"command": "frida.external.objection",
 					"when": "view == fridaApps && viewItem =~ /^app|/ && viewItem != device",
 					"group": "frida_external@4"
-                }
-            ],
-            "editor/context": [
-                {
-                    "command": "frida.external.compile",
-                    "when": "editorLangId == typescript",
-                    "group": "navigation"
-                }
-            ],
-            "explorer/context": [
-                {
-                    "command": "frida.external.compile",
-                    "when": "resourceLangId == typescript",
-                    "group": "navigation"
-                }
-            ]
+				}
+			],
+			"editor/context": [
+				{
+					"command": "frida.external.compile",
+					"when": "editorLangId == typescript || resourceFilename == 'package.json'",
+					"group": "frida_editor_compile@1"
+				},
+				{
+					"command": "frida.external.watch",
+					"when": "editorLangId == typescript || resourceFilename == 'package.json'",
+					"group": "frida_editor_compile@2"
+				}
+			],
+			"explorer/context": [
+				{
+					"command": "frida.external.compile",
+					"when": "resourceLangId == typescript || resourceFilename == 'package.json'",
+					"group": "frida_explorer_compile@1"
+				},
+				{
+					"command": "frida.external.watch",
+					"when": "resourceLangId == typescript || resourceFilename == 'package.json'",
+					"group": "frida_explorer_compile@2"
+				}
+			],
+			"commandPalette": [
+				{
+					"command": "frida.external.compile",
+					"when": "resourceLangId == typescript || resourceFilename == 'package.json'",
+					"group": "frida_explorer_compile@1"
+				},
+				{
+					"command": "frida.external.watch",
+					"when": "resourceLangId == typescript || resourceFilename == 'package.json'",
+					"group": "frida_explorer_compile@2"
+				}
+			]
 		},
 		"configuration": {
 			"type": "object",
@@ -242,9 +273,9 @@
 					"type": "boolean",
 					"description": "Option to use if frida is listening on a specific IP/PORT",
 					"default": false
-                },
-                "vscodefrida.addr": {
-                    "type":"array",
+				},
+				"vscodefrida.addr": {
+					"type": "array",
 					"description": "IP:PORT of remote devices to use if remote option is true",
 					"default": []
 				}

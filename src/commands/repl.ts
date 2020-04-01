@@ -4,7 +4,7 @@ import { TargetItem, AppItem, ProcessItem } from '../providers/devices';
 import { platform } from 'os';
 import { DeviceType } from '../types';
 import { terminate } from '../driver/frida';
-import { refresh, getConfiguration, runScriptOrNot, whichScript } from '../utils';
+import { refresh, getConfiguration, runScriptOrNot, whichScript, updateLastReplConfig, getLastReplConfig } from '../utils';
 
 let NEXT_TERM_ID = 1;
 const configuration = getConfiguration();
@@ -20,6 +20,8 @@ function repl(args: string[], tool: string='frida') {
     args.push('--runtime');
     args.push(runtime);
   }
+
+  updateLastReplConfig(args);
 
   console.log(`${tool} ${args.join(' ')}`);
 
@@ -39,10 +41,15 @@ export async function spawn(node?: AppItem) {
   const runScript = await runScriptOrNot();
   let scriptArgs = [];
 
-  if (runScript === true) {
-    const script = await whichScript();
+  if (runScript !== 0) {
+    let script: string | undefined;
+    if (runScript === 1) {
+      script = await whichScript();
+    } else {
+      script = vscode.window.activeTextEditor?.document.uri.fsPath;
+    }
 
-    if (script !== "") {
+    if (script !== "" && script !== undefined) {
       scriptArgs.push('-l');
       scriptArgs.push(script);
     }
@@ -68,10 +75,15 @@ export async function spawnSuspended(node?: AppItem) {
   const runScript = await runScriptOrNot();
   let scriptArgs = [];
 
-  if (runScript === true) {
-    const script = await whichScript();
+  if (runScript !== 0) {
+    let script: string | undefined;
+    if (runScript === 1) {
+      script = await whichScript();
+    } else {
+      script = vscode.window.activeTextEditor?.document.uri.fsPath;
+    }
 
-    if (script !== "") {
+    if (script !== "" && script !== undefined) {
       scriptArgs.push('-l');
       scriptArgs.push(script);
     }
@@ -86,6 +98,17 @@ export async function spawnSuspended(node?: AppItem) {
 
   repl(['-f', node.data.identifier, ...remoteArgs, ...scriptArgs]);
   refresh();
+}
+
+export async function runlast() {
+  let args = getLastReplConfig();
+
+  if (args.length === 0) {
+    return vscode.window.showErrorMessage('No configuration to run yet!');
+  }
+
+  repl(args);
+  vscode.window.showInformationMessage(`Running frida ${args.join(' ')}`);
 }
 
 export function kill(node?: TargetItem) {
@@ -110,10 +133,15 @@ export async function attach(node?: TargetItem) {
   const runScript = await runScriptOrNot();
   let scriptArgs = [];
 
-  if (runScript === true) {
-    const script = await whichScript();
+  if (runScript !== 0) {
+    let script: string | undefined;
+    if (runScript === 1) {
+      script = await whichScript();
+    } else {
+      script = vscode.window.activeTextEditor?.document.uri.fsPath;
+    }
 
-    if (script !== "") {
+    if (script !== "" && script !== undefined) {
       scriptArgs.push('-l');
       scriptArgs.push(script);
     }

@@ -49,7 +49,6 @@ def main(args):
 
     if args.action == 'fs':
         method = getattr(fs, args.method)
-        print(method)
         return method(*args.args)
 
     if args.action == 'download':

@@ -3,15 +3,22 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as cp from 'child_process';
+
 import { platformize } from '../utils';
 
 let NEXT_TERM_ID = 1;
 
-export function compile(param: any): boolean {
-  console.log(typeof param);
+export function compile(param: vscode.Uri): boolean {
+  if (param === undefined) {
+    if (!vscode.window.activeTextEditor) {
+      return false;
+    }
+    
+    let { document } = vscode.window.activeTextEditor;
+    param = document.uri;
+  }
+  
   console.log(param);
-
-  const title = `Frida agent compiler #${NEXT_TERM_ID++}`;
 
   const dirName = path.dirname(param.fsPath);
   const parentDir = fs.realpathSync(`${dirName}/..`);
@@ -21,7 +28,7 @@ export function compile(param: any): boolean {
   console.log(dirName, parentDir, dirPackage);
 
   if (dirPackage === undefined) {
-    vscode.window.showErrorMessage('This file is not in a valid node package. Missing package.json');
+    vscode.window.showErrorMessage('This file is not in a valid NPM package. Missing package.json');
     
     return false;
   }
@@ -58,6 +65,41 @@ export function compile(param: any): boolean {
       });
     });
   });
+
+  return true;
+}
+
+export function watch(param?: vscode.Uri): boolean {
+  if (param === undefined) {
+    if (!vscode.window.activeTextEditor) {
+      return false;
+    }
+
+    let { document } = vscode.window.activeTextEditor;
+    param = document.uri;
+  }
+
+  console.log(param);
+
+  const title = `Frida agent compiler #${NEXT_TERM_ID++}`;
+
+  const dirName = path.dirname(param.fsPath);
+  const parentDir = fs.realpathSync(`${dirName}/..`);
+  const dirPackage = ((fs.existsSync(`${dirName}/package.json`)) ? dirName :
+                       (fs.existsSync(`${parentDir}/package.json`)) ? parentDir : undefined);
+
+  console.log(dirName, parentDir, dirPackage);
+
+  if (dirPackage === undefined) {
+    vscode.window.showErrorMessage('This file is not in a valid NPM package. Missing package.json');
+    
+    return false;
+  }
+
+  const [bin, args] = platformize('npm', ['run', 'watch']);
+
+  vscode.window.createTerminal({name: title, cwd: dirPackage, shellPath: bin, shellArgs: args}).show();
+  vscode.window.showInformationMessage("Do not forget to close this term once you're finished");
 
   return true;
 }

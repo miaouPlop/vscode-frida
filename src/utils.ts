@@ -64,16 +64,27 @@ function withConfigValue<C, K extends Extract<keyof C, string>>(
   }
 }
 
-export async function runScriptOrNot(): Promise<boolean> {
-	const result = await vscode.window.showQuickPick(['Yes', 'No'], {
+export async function runScriptOrNot(): Promise<number> {
+  if (!vscode.window.activeTextEditor) {
+    return 0;
+  }
+  
+  let { document } = vscode.window.activeTextEditor;
+  let options = ['No', 'Choose script'];
+
+  if (document.languageId === 'javascript') {
+    options = ['No', 'Choose script', 'Current script'];
+  }
+
+	const result = await vscode.window.showQuickPick(options, {
 		placeHolder: 'Do you want to run a script?'
   });
 
-  if (result === "Yes") {
-    return true;
+  if (result === undefined) {
+    return 0;
   }
 
-  return false;
+  return options.indexOf(result);
 }
 
 
@@ -86,6 +97,9 @@ export async function whichScript(): Promise<string> {
     return "";
   }
 
+  let doc = await vscode.workspace.openTextDocument(result[0]);
+  await vscode.window.showTextDocument(doc, { preview: false });
+  
   return result[0].fsPath.toString();
 }
 
@@ -106,4 +120,14 @@ export function platformize(tool: string, args: string[]): [string, string[]] {
   }
 
   return [bin, joint];
+}
+
+let lastReplConfig: any[] = [];
+
+export function updateLastReplConfig(args: string[]) {
+  lastReplConfig = args;
+}
+
+export function getLastReplConfig() {
+  return lastReplConfig;
 }
