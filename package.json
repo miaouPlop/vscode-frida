@@ -247,40 +247,70 @@
 				{
 					"command": "frida.external.compile",
 					"when": "resourceLangId == typescript || resourceFilename == 'package.json'",
-					"group": "frida_explorer_compile@1"
+					"group": "frida_palette_compile@1"
 				},
 				{
 					"command": "frida.external.watch",
 					"when": "resourceLangId == typescript || resourceFilename == 'package.json'",
-					"group": "frida_explorer_compile@2"
+					"group": "frida_palette_compile@2"
+				},
+				{
+					"command": "frida.runlast",
+					"group": "frida_palette_run@1"
 				}
 			]
 		},
 		"configuration": {
 			"type": "object",
-			"title": "vscode-frida",
+			"title": "%ext.config.title%",
 			"properties": {
-				"vscodefrida.runtime": {
+				"frida.javascriptRuntime": {
 					"type": "string",
-					"description": "Runtime used by frida",
+					"markdownDescription": "%ext.config.runtime%",
 					"enum": [
 						"v8",
 						"duk"
 					],
 					"default": "v8"
 				},
-				"vscodefrida.remote": {
+				"devices.enableRemote": {
 					"type": "boolean",
-					"description": "Option to use if frida is listening on a specific IP/PORT",
+					"markdownDescription": "%ext.config.remote%",
 					"default": false
 				},
-				"vscodefrida.addr": {
+				"devices.remoteAddresses": {
 					"type": "array",
-					"description": "IP:PORT of remote devices to use if remote option is true",
+					"markdownDescription": "%ext.config.addr%",
 					"default": []
+				},
+				"output.log": {
+					"type": "boolean",
+					"markdownDescription": "%ext.config.log%",
+					"default": false
+				},
+				"output.saveScriptAndLog": {
+					"type": "boolean",
+					"markdownDescription": "%ext.config.save%",
+					"default": false
 				}
 			}
-		}
+		},
+		"keybindings": [
+			{
+				"command": "frida.external.compile",
+				"key": "ctrl+alt+b",
+				"when": "editorLangId == typescript || resourceFilename == 'package.json'"
+			},
+			{
+				"command": "frida.external.watch",
+				"key": "ctrl+alt+w",
+				"when": "editorLangId == typescript || resourceFilename == 'package.json'"
+			},
+			{
+				"command": "frida.runlast",
+				"key": "ctrl+alt+r"
+			}
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
