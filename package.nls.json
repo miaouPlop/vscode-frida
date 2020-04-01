@@ -3,6 +3,7 @@
     "ext.config.runtime": "Runtime used by frida.\n\n`v8` runtime offers cutting edge JavaScript but `duk` is lighter.",
     "ext.config.remote": "Use frida on remote devices",
     "ext.config.addr": "List of remote devices to use.\n\nDevices put here will be used only if _remote_ is enabled.\n\nUsage: `['192.168.1.1:1234', '10.10.10.100:1337', ...]`",
-    "ext.config.log": "Log frida repl output.\n\nLogs will be saved in `[script_name_]device_timestamp.log` in the current directory",
-    "ext.config.save": "Save script and output.\n\nWill make a copy of the script run and the frida's output in a separate directory (`.save/timestamp/{script_name.js,output.log}`)"
+    "ext.config.log": "Log frida repl output.\n\nLogs will be saved in `[script_name_]device_[application|pid]_timestamp.log`",
+    "ext.config.save": "Save script and output.\n\nWill make a copy of the script run and the frida's output in a separate directory (`save/timestamp/{script_name.js,output.log}`)",
+    "ext.config.dir": "Output directory.\n\nDirectory where log and saved files are put."
 }

@@ -6,8 +6,6 @@ import { getConfiguration } from '../utils';
 
 type timer = ReturnType<typeof setTimeout>;
 const configuration = getConfiguration();
-const runtime = configuration.runtime;
-const remote = configuration.remote;
 
 interface TargetInfo {
   pid: number;

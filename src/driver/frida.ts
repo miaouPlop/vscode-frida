@@ -12,7 +12,6 @@ import { URLSearchParams } from 'url';
 
 const py = join(__dirname, '..', '..', 'backend', 'driver.py');
 const configuration = getConfiguration();
-const remote = configuration.remote;
 
 export function exec(...params: string[]): Promise<any> {
   const [bin, args] = platformize('python3', [py, ...params]);
@@ -33,9 +32,13 @@ export function exec(...params: string[]): Promise<any> {
 export function devices() {
   let params: string[] = [];
 
-  configuration.addr.map(remote => {
-    params.push(remote);
-  });
+  console.log(configuration);
+
+  if (configuration.device.enableRemote === true) {
+    configuration.device.remoteAddresses.map(remote => {
+      params.push(remote);
+    });
+  }
 
   return exec('devices', ...params) as Promise<Device[]>;
 }
@@ -59,7 +62,7 @@ export async function launch(device: string, bundle: string): Promise<Number> {
   let remoteParams = [];
 
   if (device.includes('remote@')) {
-    if (remote === true) {
+    if (configuration.device.enableRemote === true) {
       remoteParams.push('-H');
     }
   } else {
@@ -108,7 +111,7 @@ export function terminate(device: string, target: string) {
   let remoteParams = [];
 
   if (device.includes('remote@')) {
-    if (remote === true) {
+    if (configuration.device.enableRemote === true) {
       remoteParams.push('-H');
     }
   } else {

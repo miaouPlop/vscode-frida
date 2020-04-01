@@ -264,7 +264,7 @@
 			"type": "object",
 			"title": "%ext.config.title%",
 			"properties": {
-				"frida.javascriptRuntime": {
+				"frida.javascript.runtime": {
 					"type": "string",
 					"markdownDescription": "%ext.config.runtime%",
 					"enum": [
@@ -273,25 +273,30 @@
 					],
 					"default": "v8"
 				},
-				"devices.enableRemote": {
+				"frida.device.enableRemote": {
 					"type": "boolean",
 					"markdownDescription": "%ext.config.remote%",
 					"default": false
 				},
-				"devices.remoteAddresses": {
+				"frida.device.remoteAddresses": {
 					"type": "array",
 					"markdownDescription": "%ext.config.addr%",
 					"default": []
 				},
-				"output.log": {
+				"frida.output.log": {
 					"type": "boolean",
 					"markdownDescription": "%ext.config.log%",
 					"default": false
 				},
-				"output.saveScriptAndLog": {
+				"frida.output.saveScriptAndLog": {
 					"type": "boolean",
 					"markdownDescription": "%ext.config.save%",
 					"default": false
+				},
+				"frida.output.saveDirectory": {
+					"type": "string",
+					"markdownDescription": "%ext.config.dir%",
+					"default": ""
 				}
 			}
 		},

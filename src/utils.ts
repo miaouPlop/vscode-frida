@@ -2,7 +2,32 @@ import * as vscode from 'vscode';
 import { join } from 'path';
 import { platform } from 'os';
 
-const configurationSection = 'vscodefrida';
+interface IJavaScriptSettings {
+  runtime: 'v8' | 'duk';
+}
+
+interface IDeviceSettings {
+  enableRemote: boolean;
+  remoteAddresses: string[];
+}
+
+interface IOutputSettings {
+  log: boolean;
+  saveScriptAndLog: boolean;
+  saveDirectory: string;
+}
+
+interface IFridaSettings {
+  javascript: IJavaScriptSettings;
+  device: IDeviceSettings;
+  output: IOutputSettings;
+}
+
+interface IReplArgs {
+  
+}
+
+const configurationSection = 'frida';
 
 export function resource(...paths: string[]): vscode.Uri {
   const file = join(__dirname, '..', 'resources', ...paths);
@@ -18,61 +43,44 @@ export function refresh() {
   vscode.commands.executeCommand('frida.apps.refresh');
 }
 
-interface SynchronizedConfiguration {
-  runtime: 'v8' | 'duk';
-  remote: boolean;
-  addr: string[];
-}
-
-export function getConfiguration(): SynchronizedConfiguration {
+export function getConfiguration(): IFridaSettings {
   const config = vscode.workspace.getConfiguration(configurationSection);
-  const outConfig: SynchronizedConfiguration = {
-    runtime: 'v8',
-    remote: false,
-    addr: [],
+  const outConfig: IFridaSettings = {
+    javascript: {
+      runtime: config.get('javascript.runtime', 'v8')
+    },
+    device: {
+      enableRemote: config.get('device.enableRemote', false),
+      remoteAddresses: config.get('device.remoteAddresses', [])
+    },
+    output: {
+      log: config.get('output.log', false),
+      saveScriptAndLog: config.get('output.saveScriptAndLog', false),
+      saveDirectory: config.get('output.saveDirectory', '')
+    }
   };
-
-  withConfigValue(config, outConfig, 'runtime');
-  withConfigValue(config, outConfig, 'remote');
-  withConfigValue(config, outConfig, 'addr');
 
   return outConfig;
 }
 
-function withConfigValue<C, K extends Extract<keyof C, string>>(
-  config: vscode.WorkspaceConfiguration,
-  outConfig: C,
-  key: K,
-): void {
-  const configSetting = config.inspect<C[K]>(key);
-  if (!configSetting) {
-      return;
-  }
+export function getTime(): string {
+  const config = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+  const format = new Intl.DateTimeFormat('en', config);
+  const [{ value: mo },, { value: da },, { value: ye },, { value: ho },, { value: mi },, { value: se}] = format.formatToParts(new Date());
 
-  // Make sure the user has actually set the value.
-  // VS Code will return the default values instead of `undefined`, even if user has not don't set anything.
-  if (typeof configSetting.globalValue === 'undefined'
-    && typeof configSetting.workspaceFolderValue === 'undefined'
-    && typeof configSetting.workspaceValue === 'undefined'
-  ) {
-    return;
-  }
-
-  const value = config.get<vscode.WorkspaceConfiguration[K] | undefined>(key, undefined);
-  if (typeof value !== 'undefined') {
-    (outConfig as any)[key] = value;
-  }
+  return `${ye}${mo}${da}${ho}${mi}${se}`;
 }
 
 export async function runScriptOrNot(): Promise<number> {
-  if (!vscode.window.activeTextEditor) {
-    return 0;
-  }
+  let document = undefined;
   
-  let { document } = vscode.window.activeTextEditor;
+  if (vscode.window.activeTextEditor) {
+    document = vscode.window.activeTextEditor.document; 
+  }
+
   let options = ['No', 'Choose script'];
 
-  if (document.languageId === 'javascript') {
+  if (document !== undefined && document.languageId === 'javascript') {
     options = ['No', 'Choose script', 'Current script'];
   }
 
