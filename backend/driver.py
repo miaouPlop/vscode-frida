@@ -2,6 +2,8 @@
 
 import sys
 from pathlib import Path
+import tempfile
+import json
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -39,7 +41,16 @@ def main(args):
     agent.load()
 
     if args.action == 'rpc':
-        return agent.invoke(args.method, *args.args)
+        if args.method not in ["jclasses", "jmethods", "oclasses", "omethods"]:
+            return agent.invoke(args.method, *args.args)
+        else:
+            out = agent.invoke(args.method, *args.args)
+            fname = 'Error'
+            with tempfile.NamedTemporaryFile('w', delete=False) as f:
+                fname = f.name
+                json.dump(out, f)
+            return {'tempfile': fname}
+
 
     if args.action == 'syslog':
         syslog.pipe(agent)

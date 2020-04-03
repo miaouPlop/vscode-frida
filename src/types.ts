@@ -2,6 +2,8 @@
 export enum ProviderType {
   Apps = 'apps',
   Processes = 'ps',
+  Klasses = 'cl',
+  Methods = 'me',
 }
 
 export enum DeviceType {
@@ -37,4 +39,17 @@ export class Process {
   pid: number = 0;
   largeIcon: string = '';
   smallIcon: string = '';
+}
+
+export class Klass {
+  name: string = '';
+  fname: string = '';
+  largeIcon: string = 'error.svg';
+  smallIcon: string = 'error.svg';
+}
+
+export class Method {
+  name: string = '';
+  largeIcon: string = 'error.svg';
+  smallIcon: string = 'error.svg';
 }

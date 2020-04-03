@@ -24,6 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const psProvider = new DevicesProvider(ProviderType.Processes);
 	vscode.window.registerTreeDataProvider('fridaPs', psProvider);
 	context.subscriptions.push(vscode.commands.registerCommand('frida.ps.refresh', () => psProvider.refresh()));
+
 	context.subscriptions.push(vscode.commands.registerCommand('frida.spawn', repl.spawn));
 	context.subscriptions.push(vscode.commands.registerCommand('frida.spawn.suspended', repl.spawnSuspended));
 	context.subscriptions.push(vscode.commands.registerCommand('frida.attach', repl.attach));

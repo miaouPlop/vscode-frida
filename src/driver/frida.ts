@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { join } from 'path';
 import { execFile, spawn } from 'child_process';
-import { Device, App, Process } from '../types';
+import { Device, App, Process, Klass, Method } from '../types';
 
 import * as os from 'os';
 
@@ -51,6 +51,20 @@ export function apps(id: string) {
 export function ps(id: string) {
   let params = ['ps', id];
   return exec(...params) as Promise<Process[]>;
+}
+
+type TmpFile = {
+  tempfile: string;
+};
+
+export function klasses(device: string, app: string) {
+  let params = ['rpc', 'jclasses', '--device', device, '--pid', app];
+  return exec(...params) as Promise<TmpFile>;
+}
+
+export function methods(device: string, app: string, klass: string) {
+  let params = ['rpc', 'jmethods', klass, '--device', device, '--pid', app];
+  return exec(...params) as Promise<Method[]>;
 }
 
 export function devtype(id: string) {
